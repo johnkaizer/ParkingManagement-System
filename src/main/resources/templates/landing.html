@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Parking Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f1f1f1;
+        }
+
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+        }
+
+        .header p {
+            font-size: 1.2em;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 70vh;
+            flex-direction: column;
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            padding: 15px 30px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 10px;
+            width: 250px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .links a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Parking Management System</h1>
+    <p>Manage parking efficiently at your school with ease.</p>
+</div>
+
+<div class="container">
+    <button class="btn" onclick="window.location.href='login.html'">Login</button>
+    <button class="btn" onclick="window.location.href='register.html'">Sign Up</button>
+    <button class="btn" onclick="showHelpModal()">Help</button>
+    <button class="btn" onclick="window.location.href='about.html'">About</button>
+</div>
+
+<div class="links">
+    <a href="forgot-password.html">Forgot Password?</a>
+    <a href="terms.html">Terms & Conditions</a>
+    <a href="privacy.html">Privacy Policy</a>
+</div>
+
+<div class="footer">
+    <p>&copy; 2024 Parking Management System | All rights reserved.</p>
+</div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeHelpModal()">&times;</span>
+        <h2>How to Use the System</h2>
+        <p>This system allows users to manage parking space reservations for the school campus. Users can log in, register, check available parking spots, reserve spaces, and view their parking history.</p>
+        <p>For more information, visit the <a href="about.html">About</a> page or contact support.</p>
+    </div>
+</div>
+
+<script>
+    // Modal functionality for Help
+    function showHelpModal() {
+        document.getElementById("helpModal").style.display = "block";
+    }
+
+    function closeHelpModal() {
+        document.getElementById("helpModal").style.display = "none";
+    }
+
+    // Close modal if clicked outside the modal content
+    window.onclick = function(event) {
+        if (event.target === document.getElementById("helpModal")) {
+            closeHelpModal();
+        }
+    }
+</script>
+</body>
+</html>

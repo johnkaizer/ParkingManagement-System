@@ -12,8 +12,9 @@ public class User {
     private Long id;
 
     private String username;
-    private String email;
+    private String password;
     private String contact;
     private String vehicleNumber;
+    private String vehicleType;
 
 }

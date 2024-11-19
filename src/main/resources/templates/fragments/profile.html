@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-info input {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .profile-info select {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .profile-info .readonly {
+            background-color: #f1f1f1;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            background-color: #4CAF50;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .btn.cancel {
+            background-color: #FF0000;
+            margin-left: 10px;
+        }
+
+        .btn.save {
+            background-color: #4CAF50;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 500px;
+            max-width: 90%;
+            box-sizing: border-box;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>User Profile</h2>
+    </div>
+    <div class="profile-info">
+        <input type="text" id="username" placeholder="Username" readonly class="readonly">
+        <input type="text" id="contact" placeholder="Contact Number">
+        <input type="text" id="vehicle-number" placeholder="Vehicle Number">
+        <input type="text" id="vehicle-type" placeholder="Vehicle Type">
+        <select id="role" disabled>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+            <option value="guest">Guest</option>
+        </select>
+        <button class="btn save" id="save-btn">Save Changes</button>
+        <button class="btn cancel" id="cancel-btn">Cancel</button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="modal-overlay"></div>
+<div class="modal" id="profile-modal">
+    <div class="modal-header">Edit Profile</div>
+    <div class="modal-body">
+        <!-- Content will be dynamically loaded -->
+    </div>
+</div>
+
+<script>
+    (() => {
+        const saveBtn = document.getElementById('save-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const usernameField = document.getElementById('username');
+        const contactField = document.getElementById('contact');
+        const vehicleNumberField = document.getElementById('vehicle-number');
+        const vehicleTypeField = document.getElementById('vehicle-type');
+        const roleField = document.getElementById('role');
+
+        async function fetchUserProfile() {
+            try {
+                const response = await fetch("/api/users/profile");
+                if (response.ok) {
+                    const data = await response.json();
+                    usernameField.value = data.username;
+                    contactField.value = data.contact;
+                    vehicleNumberField.value = data.vehicleNumber;
+                    vehicleTypeField.value = data.vehicleType;
+                    // No need to update role as it cannot be edited
+                    roleField.value = data.role;
+                } else {
+                    alert("Failed to fetch user profile");
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        }
+
+        async function saveUserProfile() {
+            const updatedProfile = {
+                contact: contactField.value,
+                vehicleNumber: vehicleNumberField.value,
+                vehicleType: vehicleTypeField.value
+            };
+
+            try {
+                const response = await fetch("/api/users/profile", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(updatedProfile)
+                });
+
+                if (response.ok) {
+                    alert("Profile updated successfully!");
+                    fetchUserProfile();
+                } else {
+                    alert("Failed to update profile");
+                }
+            } catch (error) {
+                console.error("Error saving profile:", error);
+            }
+        }
+
+        saveBtn.addEventListener("click", saveUserProfile);
+        cancelBtn.addEventListener("click", () => fetchUserProfile());
+
+        // Fetch user profile on page load
+        document.addEventListener("DOMContentLoaded", fetchUserProfile);
+    })();
+</script>
+
+</body>
+</html>

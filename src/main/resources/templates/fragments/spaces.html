@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Spots Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn.add {
+            background-color: #4CAF50;
+        }
+
+        .btn.edit {
+            background-color: #FFA500;
+        }
+
+        .btn.delete {
+            background-color: #FF0000;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 500px;
+            max-width: 90%;
+            box-sizing: border-box;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-body input, .modal-body select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .modal-footer {
+            text-align: right;
+        }
+
+        .modal-footer .btn {
+            margin-left: 10px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>Parking Spots Management</h2>
+        <button class="btn add" id="add-spot-btn">Add Spot</button>
+    </div>
+    <div class="table-wrapper">
+        <table id="parking-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Lot Location</th>
+                <th>Spot Number</th>
+                <th>Pricing Rules</th>
+                <th>Occupied</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Data dynamically populated here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="overlay" id="modal-overlay"></div>
+<div class="modal" id="parking-modal">
+    <div class="modal-header" id="modal-title">Add Parking Spot</div>
+    <div class="modal-body">
+        <input type="hidden" id="parking-id">
+        <input type="text" id="lot-location" placeholder="Lot Location">
+        <input type="number" id="spot-number" placeholder="Spot Number">
+        <input type="text" id="pricing-rules" placeholder="Pricing Rules">
+        <select id="occupied-status">
+            <option value="false">Available</option>
+            <option value="true">Occupied</option>
+        </select>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" id="cancel-btn">Cancel</button>
+        <button class="btn add" id="save-btn">Save</button>
+    </div>
+</div>
+<script>
+    (() => {
+        const parkingTableBody = document.querySelector("#parking-table tbody");
+        const modal = document.getElementById("parking-modal");
+        const overlay = document.getElementById("modal-overlay");
+
+        // Fetch parking spaces from the API
+        async function fetchParkingSpaces() {
+            try {
+                const response = await fetch("/api/parking-spaces"); // Fetch data from the server
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch parking spaces: ${response.statusText}`);
+                }
+                const data = await response.json(); // Parse the JSON response
+                renderTable(data); // Render the table
+            } catch (error) {
+                console.error("Error fetching parking spaces:", error);
+                renderTable([]); // Clear the table or display a fallback
+            }
+        }
+
+        // Render parking spaces in the table
+        function renderTable(data) {
+            if (!data || data.length === 0) {
+                parkingTableBody.innerHTML = `
+                <tr><td colspan="6" class="text-center">No parking spaces found.</td></tr>
+            `;
+                return;
+            }
+
+            parkingTableBody.innerHTML = data.map(space => `
+            <tr>
+                <td>${space.parkingSpaceId}</td>
+                <td>${space.lotLocation}</td>
+                <td>${space.spotNumber}</td>
+                <td>${space.pricingRules}</td>
+                <td>${space.isOccupied ? "Yes" : "No"}</td>
+                <td>
+                    <button class="btn edit" data-id="${space.parkingSpaceId}">Edit</button>
+                    <button class="btn delete" data-id="${space.parkingSpaceId}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+            bindTableEventListeners(); // Bind edit and delete listeners
+        }
+
+        // Bind event listeners to dynamically created edit/delete buttons
+        function bindTableEventListeners() {
+            document.querySelectorAll(".btn.edit").forEach(btn =>
+                btn.addEventListener("click", () => editParkingSpace(btn.dataset.parkingSpaceId))
+            );
+            document.querySelectorAll(".btn.delete").forEach(btn =>
+                btn.addEventListener("click", () => deleteParkingSpace(btn.dataset.parkingSpaceId))
+            );
+        }
+
+        // Show modal for adding or editing parking space
+        function showModal(isEdit = false, space = {}) {
+            modal.classList.add("show");
+            overlay.classList.add("show");
+
+            document.getElementById("modal-title").innerText = isEdit ? "Edit Parking Spot" : "Add Parking Spot";
+            document.getElementById("parking-id").value = space.parkingSpaceId || '';
+            document.getElementById("lot-location").value = space.lotLocation || '';
+            document.getElementById("spot-number").value = space.spotNumber || '';
+            document.getElementById("pricing-rules").value = space.pricingRules || '';
+            document.getElementById("occupied-status").value = space.isOccupied ? 'true' : 'false';
+        }
+
+        // Hide the modal
+        function hideModal() {
+            modal.classList.remove("show");
+            overlay.classList.remove("show");
+        }
+
+        // Save parking space (add or edit)
+        async function saveParkingSpace() {
+            const parkingSpaceId = document.getElementById("parking-id").value;
+            const spaceData = {
+                lotLocation: document.getElementById("lot-location").value,
+                spotNumber: parseInt(document.getElementById("spot-number").value, 10),
+                pricingRules: document.getElementById("pricing-rules").value,
+                isOccupied: document.getElementById("occupied-status").value === 'true'
+            };
+
+            try {
+                const method = parkingSpaceId ? "PUT" : "POST";
+                const url = parkingSpaceId ? `/api/parking-spaces/${parkingSpaceId}` : "/api/parking-spaces";
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(spaceData)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to save parking space");
+                }
+
+                await fetchParkingSpaces(); // Refresh the table
+                hideModal(); // Close the modal
+            } catch (error) {
+                console.error("Error saving parking space:", error);
+            }
+        }
+
+        // Delete a parking space
+        async function editParkingSpace(parkingSpaceId) {
+            if (!parkingSpaceId) {
+                console.error("Invalid ID for editing parking space");
+                return;
+            }
+            try {
+                const response = await fetch(`/api/parking-spaces/${iparkingSpaceId}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch parking space: ${response.statusText}`);
+                }
+                const space = await response.json();
+                showModal(true, space);
+            } catch (error) {
+                console.error("Error fetching parking space:", error);
+            }
+        }
+
+        async function deleteParkingSpace(parkingSpaceId) {
+            if (!parkingSpaceId) {
+                console.error("Invalid ID for deleting parking space");
+                return;
+            }
+            try {
+                const response = await fetch(`/api/parking-spaces/${parkingSpaceId}`, { method: "DELETE" });
+                if (!response.ok) {
+                    throw new Error("Failed to delete parking space");
+                }
+                await fetchParkingSpaces();
+            } catch (error) {
+                console.error("Error deleting parking space:", error);
+            }
+        }
+
+
+        // Event listeners
+        document.getElementById("add-spot-btn").addEventListener("click", () => showModal());
+        document.getElementById("cancel-btn").addEventListener("click", hideModal);
+        document.getElementById("save-btn").addEventListener("click", saveParkingSpace);
+
+        // Fetch spaces on page load
+         fetchParkingSpaces();
+    })();
+
+</script>
+</body>
+</html>

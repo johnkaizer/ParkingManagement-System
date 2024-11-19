@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 28px;
+            color: #333;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            background: #4CAF50;
+            color: #fff;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .stat-card p {
+            margin: 10px 0 0;
+            font-size: 16px;
+        }
+
+        .chart-container {
+            margin-top: 40px;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+    </div>
+    <div class="stats-container">
+        <div class="stat-card">
+            <h2 id="total-users">50</h2>
+            <p>Total Users</p>
+        </div>
+        <div class="stat-card">
+            <h2 id="total-spots">100</h2>
+            <p>Total Parking Spots</p>
+        </div>
+        <div class="stat-card">
+            <h2 id="available-spots">30</h2>
+            <p>Available Spots</p>
+        </div>
+        <div class="stat-card">
+            <h2 id="total-amount">KES 25,000</h2>
+            <p>Total Amount from Bookings</p>
+        </div>
+    </div>
+    <div class="chart-container">
+        <canvas id="bookingsChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Hardcoded data
+    const stats = {
+        totalUsers: 50,
+        totalSpots: 100,
+        availableSpots: 30,
+        totalAmount: 25000
+    };
+
+    // Update the stats dynamically (if fetched from backend in the future)
+    document.getElementById('total-users').textContent = stats.totalUsers;
+    document.getElementById('total-spots').textContent = stats.totalSpots;
+    document.getElementById('available-spots').textContent = stats.availableSpots;
+    document.getElementById('total-amount').textContent = `KES ${stats.totalAmount}`;
+
+    // Chart.js configuration
+    const ctx = document.getElementById('bookingsChart').getContext('2d');
+    const bookingsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            datasets: [{
+                label: 'Daily Bookings',
+                data: [10, 15, 7, 20, 25, 18, 30], // Hardcoded data for now
+                borderColor: '#4CAF50',
+                fill: false,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Days of the Week'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Number of Bookings'
+                    }
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>

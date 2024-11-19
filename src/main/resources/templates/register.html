@@ -76,7 +76,7 @@
 
 <div class="container">
     <h2>Sign Up</h2>
-    <form action="/signup" method="POST">
+    <form id="signupForm">
         <div class="form-group">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" required>
@@ -107,9 +107,51 @@
     </form>
 
     <div class="footer">
-        <p>Already have an account? <a href="login.html">Login here</a></p>
+        <p>Already have an account? <a href="/login">Login here</a></p>
     </div>
 </div>
+
+<script>
+    document.getElementById('signupForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const formData = {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+            contact: document.getElementById('contact').value,
+            vehicleNumber: document.getElementById('vehicleNumber').value,
+            vehicleType: document.getElementById('vehicleType').value,
+        };
+
+        fetch('/api/users/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Registration failed.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Registration successful. Redirecting to login page.');
+                    document.getElementById('signupForm').reset(); // Clear form fields
+                    window.location.href = '/login'; // Redirect to login
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+            });
+    });
+
+</script>
 
 </body>
 </html>

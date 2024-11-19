@@ -125,8 +125,8 @@
 </div>
 
 <div class="container">
-    <button class="btn" onclick="window.location.href='login.html'">Login</button>
-    <button class="btn" onclick="window.location.href='register.html'">Sign Up</button>
+    <button class="btn" onclick="showLogin()">Login</button>
+    <button class="btn" onclick="showRegister()">Sign Up</button>
     <button class="btn" onclick="showHelpModal()">Help</button>
     <button class="btn" onclick="window.location.href='about.html'">About</button>
 </div>
@@ -152,6 +152,12 @@
 </div>
 
 <script>
+    function showLogin() {
+        window.location.href = "/login";
+    }
+    function showRegister() {
+        window.location.href = "/register";
+    }
     // Modal functionality for Help
     function showHelpModal() {
         document.getElementById("helpModal").style.display = "block";

@@ -1,0 +1,130 @@
+<div class="available-spaces-container">
+    <h2>Available Parking Spaces</h2>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by lot location..." />
+        <button id="searchButton"><i class="fas fa-search"></i></button>
+    </div>
+    <div class="spaces-grid" id="spacesGrid">
+        <!-- Cards will be dynamically added here -->
+    </div>
+</div>
+
+<!-- Modal for booking or paying -->
+<div id="actionModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <h3 id="modalTitle">Parking Spot Options</h3>
+        <p id="modalDetails"></p>
+        <div class="modal-actions">
+            <button id="bookButton" class="btn btn-primary">Book</button>
+            <button id="payButton" class="btn btn-success">Pay</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        // Fetch unoccupied parking spaces on page load
+        fetchUnoccupiedSpaces();
+
+        // Dynamic search
+        $('#searchInput').on('input', function () {
+            const query = $(this).val().trim();
+            if (query) {
+                searchParkingSpaces(query);
+            } else {
+                fetchUnoccupiedSpaces(); // Reload all when search box is cleared
+            }
+        });
+
+        // Close modal on "X" button click
+        $('#closeModal').on('click', function () {
+            $('#actionModal').hide();
+        });
+
+        // Close modal when clicking outside the modal content
+        $(window).on('click', function (event) {
+            if ($(event.target).is('#actionModal')) {
+                $('#actionModal').hide();
+            }
+        });
+
+        // Handle "Book" and "Pay" button actions
+        $('#bookButton').on('click', function () {
+            alert('Booking functionality to be implemented.');
+            $('#actionModal').hide();
+        });
+
+        $('#payButton').on('click', function () {
+            alert('Payment functionality to be implemented.');
+            $('#actionModal').hide();
+        });
+    });
+
+    // Fetch and display all unoccupied parking spaces with pricing
+    function fetchUnoccupiedSpaces() {
+        $.ajax({
+            url: '/api/parking-spaces/unoccupied/with-pricing',
+            method: 'GET',
+            success: function (data) {
+                renderSpaces(data);
+            },
+            error: function () {
+                alert('Failed to load available parking spaces.');
+            },
+        });
+    }
+
+    // Search parking spaces by lot location
+    function searchParkingSpaces(query) {
+        $.ajax({
+            url: '/api/parking-spaces/search',
+            method: 'GET',
+            data: { lotLocation: query },
+            success: function (data) {
+                renderSpaces(data);
+            },
+            error: function () {
+                alert('Failed to search parking spaces.');
+            },
+        });
+    }
+
+    // Render parking spaces in card views
+    function renderSpaces(spaces) {
+        const container = $('#spacesGrid');
+        container.empty();
+
+        if (spaces.length === 0) {
+            container.html('<p>No available spaces found.</p>');
+            return;
+        }
+
+        spaces.forEach(space => {
+            const card = `
+            <div class="card" data-id="${space.id}" data-spot="${space.spotNumber}" data-location="${space.lotLocation}" data-pricing="${space.pricing}">
+                <i class="fas fa-parking icon"></i>
+                <h3>Spot ${space.spotNumber}</h3>
+                <p>Location: ${space.lotLocation}</p>
+                <p>Pricing: ${space.pricing} KSH</p>
+            </div>
+        `;
+            container.append(card);
+        });
+
+        // Add click event to each card
+        $('.card').on('click', function () {
+            const spotNumber = $(this).data('spot');
+            const location = $(this).data('location');
+            const pricing = $(this).data('pricing');
+
+            // Populate modal with details
+            $('#modalTitle').text(`Options for Spot ${spotNumber}`);
+            $('#modalDetails').text(`Location: ${location}, Pricing: ${pricing} KSH`);
+            $('#actionModal').show();
+        });
+    }
+
+
+</script>

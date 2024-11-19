@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn.edit {
+            background-color: #FFA500;
+        }
+
+        .btn.delete {
+            background-color: #FF0000;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 500px;
+            max-width: 90%;
+            box-sizing: border-box;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-body input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .modal-footer {
+            text-align: right;
+        }
+
+        .modal-footer .btn {
+            margin-left: 10px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>User Management</h2>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Search Users...">
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table id="user-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Contact</th>
+                <th>Role</th>
+                <th>Vehicle Number</th>
+                <th>Vehicle Type</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Data dynamically populated here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="overlay" id="modal-overlay"></div>
+<div class="modal" id="user-modal">
+    <div class="modal-header" id="modal-title">Edit User</div>
+    <div class="modal-body">
+        <input type="hidden" id="user-id">
+        <input type="text" id="username" placeholder="Username">
+        <input type="text" id="contact" placeholder="Contact">
+        <input type="text" id="role" placeholder="Role">
+        <input type="text" id="vehicle-number" placeholder="Vehicle Number">
+        <input type="text" id="vehicle-type" placeholder="Vehicle Type">
+    </div>
+    <div class="modal-footer">
+        <button class="btn" id="cancel-btn">Cancel</button>
+        <button class="btn edit" id="save-btn">Save</button>
+    </div>
+</div>
+
+<script>
+    (() => {
+        const userTableBody = document.querySelector("#user-table tbody");
+        const modal = document.getElementById("user-modal");
+        const overlay = document.getElementById("modal-overlay");
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch("/api/users?t=" + Date.now());
+                const data = await response.json();
+                renderTable(data);
+            } catch (error) {
+                console.error("Error fetching users:", error);
+            }
+        }
+
+        function renderTable(data) {
+            userTableBody.innerHTML = data.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.contact}</td>
+                    <td>${user.role}</td>
+                    <td>${user.vehicleNumber}</td>
+                    <td>${user.vehicleType}</td>
+                    <td>
+                        <button class="btn edit" data-id="${user.id}">Edit</button>
+                        <button class="btn delete" data-id="${user.id}">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.querySelectorAll(".btn.edit").forEach(btn =>
+                btn.addEventListener("click", () => editUser(btn.dataset.id))
+            );
+            document.querySelectorAll(".btn.delete").forEach(btn =>
+                btn.addEventListener("click", () => deleteUser(btn.dataset.id))
+            );
+        }
+
+        function showModal(user = {}) {
+            modal.classList.add("show");
+            overlay.classList.add("show");
+            document.getElementById("user-id").value = user.id || '';
+            document.getElementById("username").value = user.username || '';
+            document.getElementById("contact").value = user.contact || '';
+            document.getElementById("role").value = user.role || '';
+            document.getElementById("vehicle-number").value = user.vehicleNumber || '';
+            document.getElementById("vehicle-type").value = user.vehicleType || '';
+        }
+
+        function hideModal() {
+            modal.classList.remove("show");
+            overlay.classList.remove("show");
+        }
+
+        async function saveUser() {
+            const id = document.getElementById("user-id").value;
+            const userData = {
+                username: document.getElementById("username").value,
+                contact: document.getElementById("contact").value,
+                role: document.getElementById("role").value,
+                vehicleNumber: document.getElementById("vehicle-number").value,
+                vehicleType: document.getElementById("vehicle-type").value,
+            };
+
+            try {
+                const method = id ? "PUT" : "POST";
+                const url = id ? `/api/users/${id}` : "/api/users";
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to save user");
+                }
+
+                await fetchUsers();
+                hideModal();
+            } catch (error) {
+                console.error("Error saving user:", error);
+            }
+        }
+
+        async function deleteUser(id) {
+            try {
+                const response = await fetch(`/api/users/${id}`, { method: "DELETE" });
+                if (!response.ok) {
+                    throw new Error("Failed to delete user");
+                }
+                await fetchUsers();
+            } catch (error) {
+                console.error("Error deleting user:", error);
+            }
+        }
+
+        async function editUser(id) {
+            try {
+                const response = await fetch(`/api/users/${id}`);
+                const user = await response.json();
+                showModal(user);
+            } catch (error) {
+                console.error("Error fetching user:", error);
+            }
+        }
+
+        document.getElementById("cancel-btn").addEventListener("click", hideModal);
+        document.getElementById("save-btn").addEventListener("click", saveUser);
+
+        fetchUsers();
+    })();
+</script>
+</body>
+</html>

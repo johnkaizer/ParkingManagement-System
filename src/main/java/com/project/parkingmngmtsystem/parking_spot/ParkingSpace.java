@@ -14,6 +14,6 @@ public class ParkingSpace {
     private String lotLocation;
     private Integer spotNumber;
     private String pricingRules;
-    private String occupancyStatus;
+    private boolean isOccupied;
 
 }

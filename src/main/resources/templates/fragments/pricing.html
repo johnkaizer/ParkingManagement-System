@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing Rules</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn.add {
+            background-color: #4CAF50;
+        }
+
+        .btn.edit {
+            background-color: #FFA500;
+        }
+
+        .btn.delete {
+            background-color: #FF0000;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 500px;
+            max-width: 90%;
+            box-sizing: border-box;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-body input, .modal-body select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .modal-footer {
+            text-align: right;
+        }
+
+        .modal-footer .btn {
+            margin-left: 10px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>Pricing Rules</h2>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Search Pricing Rules...">
+        </div>
+        <button class="btn add" id="add-pricing-btn">Add Rule</button>
+    </div>
+    <div class="table-wrapper">
+        <table id="pricing-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Time Range</th>
+                <th>Base Rate</th>
+                <th>Demand Factor</th>
+                <th>Day Type</th>
+                <th>Seasonal Adjustment</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Data dynamically populated here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="overlay" id="modal-overlay"></div>
+<div class="modal" id="pricing-modal">
+    <div class="modal-header" id="modal-title">Add Pricing Rule</div>
+    <div class="modal-body">
+        <input type="hidden" id="pricing-id">
+        <input type="text" id="time-range" placeholder="Time Range">
+        <input type="number" id="base-rate" placeholder="Base Rate">
+        <input type="number" id="demand-factor" placeholder="Demand Factor">
+        <select id="day-type">
+            <option value="">Select Day Type</option>
+            <option value="weekday">Weekday</option>
+            <option value="weekend">Weekend</option>
+            <option value="holiday">Holiday</option>
+        </select>
+        <input type="number" id="seasonal-adjustment" placeholder="Seasonal Adjustment">
+    </div>
+    <div class="modal-footer">
+        <button class="btn" id="cancel-btn">Cancel</button>
+        <button class="btn add" id="save-btn">Save</button>
+    </div>
+</div>
+<script>
+    // Encapsulate the code in an IIFE
+    (() => {
+        const pricingTableBody = document.querySelector("#pricing-table tbody");
+        const modal = document.getElementById("pricing-modal");
+        const overlay = document.getElementById("modal-overlay");
+
+        async function fetchPricingRules() {
+            try {
+                const response = await fetch("/api/pricing?t=" + Date.now()); // Avoid cached response
+                const data = await response.json();
+                renderTable(data);
+            } catch (error) {
+                console.error("Error fetching pricing rules:", error);
+            }
+        }
+
+        function renderTable(data) {
+            pricingTableBody.innerHTML = data.map(rule => `
+        <tr>
+            <td>${rule.id}</td>
+            <td>${rule.timeRange}</td>
+            <td>${rule.baseRate}</td>
+            <td>${rule.demandFactor}</td>
+            <td>${rule.dayType}</td>
+            <td>${rule.seasonalAdjustment}</td>
+            <td>
+                <button class="btn edit" data-id="${rule.id}">Edit</button>
+                <button class="btn delete" data-id="${rule.id}">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+
+            document.querySelectorAll(".btn.edit").forEach(btn =>
+                btn.addEventListener("click", () => editRule(btn.dataset.id))
+            );
+            document.querySelectorAll(".btn.delete").forEach(btn =>
+                btn.addEventListener("click", () => deleteRule(btn.dataset.id))
+            );
+        }
+
+
+        function showModal(isEdit = false, rule = {}) {
+            modal.classList.add("show");
+            overlay.classList.add("show");
+            document.getElementById("modal-title").innerText = isEdit ? "Edit Pricing Rule" : "Add Pricing Rule";
+            document.getElementById("pricing-id").value = rule.id || '';
+            document.getElementById("time-range").value = rule.timeRange || '';
+            document.getElementById("base-rate").value = rule.baseRate || '';
+            document.getElementById("demand-factor").value = rule.demandFactor || '';
+            document.getElementById("day-type").value = rule.dayType || '';
+            document.getElementById("seasonal-adjustment").value = rule.seasonalAdjustment || '';
+        }
+
+        function hideModal() {
+            modal.classList.remove("show");
+            overlay.classList.remove("show");
+        }
+
+        async function savePricing() {
+            const id = document.getElementById("pricing-id").value;
+            const pricingData = {
+                timeRange: document.getElementById("time-range").value,
+                baseRate: parseFloat(document.getElementById("base-rate").value),
+                demandFactor: parseFloat(document.getElementById("demand-factor").value),
+                dayType: document.getElementById("day-type").value,
+                seasonalAdjustment: parseFloat(document.getElementById("seasonal-adjustment").value)
+            };
+
+            try {
+                const method = id ? "PUT" : "POST";
+                const url = id ? `/api/pricing/${id}` : "/api/pricing";
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(pricingData)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to save pricing rule");
+                }
+
+                await fetchPricingRules();
+                hideModal();
+            } catch (error) {
+                console.error("Error saving pricing rule:", error);
+            }
+        }
+
+        async function deleteRule(id) {
+            try {
+                const response = await fetch(`/api/pricing/${id}`, {method: "DELETE"});
+                if (!response.ok) {
+                    throw new Error("Failed to delete pricing rule");
+                }
+                await fetchPricingRules();
+            } catch (error) {
+                console.error("Error deleting pricing rule:", error);
+            }
+        }
+
+        async function editRule(id) {
+            try {
+                const response = await fetch(`/api/pricing/${id}`);
+                const rule = await response.json();
+                showModal(true, rule);
+            } catch (error) {
+                console.error("Error fetching pricing rule:", error);
+            }
+        }
+
+        document.getElementById("add-pricing-btn").addEventListener("click", () => showModal());
+        document.getElementById("cancel-btn").addEventListener("click", hideModal);
+        document.getElementById("save-btn").addEventListener("click", savePricing);
+
+        fetchPricingRules();
+
+        // Initial fetch on load
+        document.addEventListener("DOMContentLoaded", fetchPricingRules);
+    })();
+
+</script>
+
+</body>
+</html>

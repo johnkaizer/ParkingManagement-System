@@ -14,6 +14,7 @@ public class User {
     private String username;
     private String password;
     private String contact;
+    private String role;
     private String vehicleNumber;
     private String vehicleType;
 

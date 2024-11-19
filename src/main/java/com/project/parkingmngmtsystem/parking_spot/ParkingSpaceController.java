@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/parking-spaces")
@@ -45,5 +46,32 @@ public class ParkingSpaceController {
         parkingSpaceService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-}
+    // Endpoint to get the total number of parking spaces
+    @GetMapping("/total")
+    public ResponseEntity<Long> getTotalParkingSpaces() {
+        long totalSpaces = parkingSpaceService.getTotalParkingSpaces();
+        return ResponseEntity.ok(totalSpaces);
+    }
 
+    // Endpoint to get the number of unoccupied parking spaces
+    @GetMapping("/unoccupied")
+    public ResponseEntity<Long> getUnoccupiedParkingSpacesCount() {
+        long unoccupiedSpaces = parkingSpaceService.getUnoccupiedParkingSpacesCount();
+        return ResponseEntity.ok(unoccupiedSpaces);
+    }
+
+    // Endpoint to search parking spaces by lot location
+    @GetMapping("/search")
+    public ResponseEntity<List<ParkingSpace>> searchByLotLocation(@RequestParam String lotLocation) {
+        List<ParkingSpace> spaces = parkingSpaceService.searchByLotLocation(lotLocation);
+        return ResponseEntity.ok(spaces);
+    }
+
+    // Endpoint to get all unoccupied parking spaces
+    @GetMapping("/unoccupied/with-pricing")
+    public ResponseEntity<List<Map<String, Object>>> getUnoccupiedSpacesWithPricing() {
+        List<Map<String, Object>> spacesWithPricing = parkingSpaceService.getUnoccupiedSpacesWithPricing();
+        return ResponseEntity.ok(spacesWithPricing);
+    }
+
+}

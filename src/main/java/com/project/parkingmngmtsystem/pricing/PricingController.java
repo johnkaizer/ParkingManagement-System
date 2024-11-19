@@ -46,4 +46,3 @@ public class PricingController {
         return ResponseEntity.noContent().build();
     }
 }
-

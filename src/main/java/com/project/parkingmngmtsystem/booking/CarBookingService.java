@@ -2,6 +2,7 @@ package com.project.parkingmngmtsystem.booking;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -12,8 +13,9 @@ public class CarBookingService {
         this.carBookingRepository = carBookingRepository;
     }
 
-    public CarBooking createBooking(CarBooking carBooking) {
-        return carBookingRepository.save(carBooking);
+    public CarBooking createBooking(CarBooking booking) {
+        booking.setBookingDateTime(LocalDateTime.now());
+        return carBookingRepository.save(booking);
     }
 
     public List<CarBooking> getAllBookings() {
@@ -27,7 +29,7 @@ public class CarBookingService {
 
     public CarBooking updateBooking(Long id, CarBooking updatedBooking) {
         CarBooking existingBooking = getBookingById(id);
-        existingBooking.setName(updatedBooking.getName());
+        existingBooking.setCustomerName(updatedBooking.getCustomerName());
         existingBooking.setCarNumber(updatedBooking.getCarNumber());
         existingBooking.setAmount(updatedBooking.getAmount());
         existingBooking.setBookingDateTime(updatedBooking.getBookingDateTime());

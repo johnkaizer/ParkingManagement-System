@@ -9,22 +9,30 @@
     </div>
 </div>
 
-<!-- Modal for booking or paying -->
+<!-- Modal for booking -->
 <div id="actionModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close" id="closeModal">&times;</span>
         <h3 id="modalTitle">Parking Spot Options</h3>
         <p id="modalDetails"></p>
-        <div class="modal-actions">
+        <div id="bookingForm" style="display: none;">
+            <input type="text" id="customerName" placeholder="Customer Name" required />
+            <input type="text" id="carNumber" placeholder="Car Number" required />
+            <label for="useDateTime">Check-In Time:</label>
+            <input type="datetime-local" id="useDateTime" required />
+            <button id="confirmBooking" class="btn btn-primary">Confirm Booking</button>
+        </div>
+        <div id="modalActions">
             <button id="bookButton" class="btn btn-primary">Book</button>
             <button id="payButton" class="btn btn-success">Pay</button>
         </div>
     </div>
 </div>
 
-
 <script>
     $(document).ready(function () {
+        let selectedSpot = {}; // Store the selected parking spot details
+
         // Fetch unoccupied parking spaces on page load
         fetchUnoccupiedSpaces();
 
@@ -41,90 +49,205 @@
         // Close modal on "X" button click
         $('#closeModal').on('click', function () {
             $('#actionModal').hide();
+            resetModal();
         });
 
         // Close modal when clicking outside the modal content
         $(window).on('click', function (event) {
             if ($(event.target).is('#actionModal')) {
                 $('#actionModal').hide();
+                resetModal();
             }
         });
 
-        // Handle "Book" and "Pay" button actions
-        $('#bookButton').on('click', function () {
-            alert('Booking functionality to be implemented.');
-            $('#actionModal').hide();
-        });
-
-        $('#payButton').on('click', function () {
-            alert('Payment functionality to be implemented.');
-            $('#actionModal').hide();
-        });
-    });
-
-    // Fetch and display all unoccupied parking spaces with pricing
-    function fetchUnoccupiedSpaces() {
-        $.ajax({
-            url: '/api/parking-spaces/unoccupied/with-pricing',
-            method: 'GET',
-            success: function (data) {
-                renderSpaces(data);
-            },
-            error: function () {
-                alert('Failed to load available parking spaces.');
-            },
-        });
-    }
-
-    // Search parking spaces by lot location
-    function searchParkingSpaces(query) {
-        $.ajax({
-            url: '/api/parking-spaces/search',
-            method: 'GET',
-            data: { lotLocation: query },
-            success: function (data) {
-                renderSpaces(data);
-            },
-            error: function () {
-                alert('Failed to search parking spaces.');
-            },
-        });
-    }
-
-    // Render parking spaces in card views
-    function renderSpaces(spaces) {
-        const container = $('#spacesGrid');
-        container.empty();
-
-        if (spaces.length === 0) {
-            container.html('<p>No available spaces found.</p>');
-            return;
-        }
-
-        spaces.forEach(space => {
-            const card = `
-            <div class="card" data-id="${space.id}" data-spot="${space.spotNumber}" data-location="${space.lotLocation}" data-pricing="${space.pricing}">
-                <i class="fas fa-parking icon"></i>
-                <h3>Spot ${space.spotNumber}</h3>
-                <p>Location: ${space.lotLocation}</p>
-                <p>Pricing: ${space.pricing} KSH</p>
-            </div>
-        `;
-            container.append(card);
-        });
-
-        // Add click event to each card
-        $('.card').on('click', function () {
-            const spotNumber = $(this).data('spot');
-            const location = $(this).data('location');
-            const pricing = $(this).data('pricing');
+        // Handle card click to store parking spot details
+        $(document).on('click', '.card', function () {
+            selectedSpot = {
+                spotNumber: $(this).data('spot'),
+                location: $(this).data('location'),
+                pricing: $(this).data('pricing'),
+            };
 
             // Populate modal with details
-            $('#modalTitle').text(`Options for Spot ${spotNumber}`);
-            $('#modalDetails').text(`Location: ${location}, Pricing: ${pricing} KSH`);
+            $('#modalTitle').text(`Options for Spot ${selectedSpot.spotNumber}`);
+            $('#modalDetails').text(`Location: ${selectedSpot.location}, Pricing: ${selectedSpot.pricing} KSH`);
+
             $('#actionModal').show();
         });
-    }
+
+        // Show booking form when "Book" is clicked
+        $('#bookButton').on('click', function () {
+            $('#modalActions').hide();
+            $('#bookingForm').show();
+        });
+
+        // Confirm booking
+        $('#confirmBooking').on('click', function () {
+            const customerName = $('#customerName').val().trim();
+            const carNumber = $('#carNumber').val().trim();
+            const useDateTime = $('#useDateTime').val();
+
+            if (!customerName || !carNumber || !useDateTime) {
+                alert('All fields are required!');
+                return;
+            }
+
+            const bookingDateTime = new Date().toISOString(); // Generate the current date-time
+
+            $.ajax({
+                url: '/api/bookings',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    customerName,
+                    carNumber,
+                    spotNumber: selectedSpot.spotNumber,
+                    location: selectedSpot.location,
+                    amount: selectedSpot.pricing,
+                    useDateTime,
+                    bookingDateTime,
+                }),
+                success: function () {
+                    alert('Booking successful!');
+                    $('#actionModal').hide();
+                    fetchUnoccupiedSpaces();
+                },
+                error: function (xhr) {
+                    alert(`Failed to book the parking spot: ${xhr.responseText}`);
+                },
+            });
+        });
 
 
+        // Placeholder for payment functionality
+        $('#payButton').on('click', function () {
+            const parkingSpaceId = selectedSpot.spotNumber; // Retrieve parking space ID
+            const carNumber = localStorage.getItem('loggedUserCarNumber');  // Retrieve car number from localStorage
+            const totalCost = selectedSpot.pricing;  // Retrieve total cost for the selected spot
+
+            // Log all values to check
+            console.log('Parking Space ID:', parkingSpaceId);
+            console.log('Car Number:', carNumber);
+            console.log('Total Cost:', totalCost);
+
+            // Check if any required value is missing
+            if (!parkingSpaceId || !carNumber || !totalCost) {
+                console.error('Missing required fields');
+                alert('All fields are required!');
+                return;
+            }
+
+            // Fetch user details from the backend
+            $.ajax({
+                url: '/api/profile',
+                method: 'GET',
+                success: function (userResponse) {
+                    // Log the user details
+                    console.log('User Profile:', userResponse);
+
+                    // Get the user ID from the response
+                    const userId = userResponse.id;
+
+                    // Prepare the payment request data
+                    const startTime = new Date().toISOString(); // Current date-time
+                    const endTime = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // Add 1 hour for demo
+
+                    // Proceed with the payment request using the fetched user data
+                    $.ajax({
+                        url: '/api/transactions/pay',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            userId,
+                            spaceId: parkingSpaceId,
+                            carNumber,
+                            startTime,
+                            endTime,
+                            totalCost
+                        }),
+                        success: function (response) {
+                            alert(response);
+                            $('#actionModal').hide();
+                            fetchUnoccupiedSpaces(); // Refresh the grid
+                        },
+                        error: function (xhr) {
+                            alert(`Payment failed: ${xhr.responseText}`);
+                        },
+                    });
+                },
+                error: function () {
+                    alert('Failed to fetch user details.');
+                }
+            });
+        });
+
+
+
+
+
+
+
+        // Fetch and display all unoccupied parking spaces with pricing
+        function fetchUnoccupiedSpaces() {
+            $.ajax({
+                url: '/api/parking-spaces/unoccupied/with-pricing',
+                method: 'GET',
+                success: function (data) {
+                    renderSpaces(data);
+                },
+                error: function () {
+                    alert('Failed to load available parking spaces.');
+                },
+            });
+        }
+
+        // Search parking spaces by lot location
+        function searchParkingSpaces(query) {
+            $.ajax({
+                url: '/api/parking-spaces/search',
+                method: 'GET',
+                data: { lotLocation: query },
+                success: function (data) {
+                    renderSpaces(data);
+                },
+                error: function () {
+                    alert('Failed to search parking spaces.');
+                },
+            });
+        }
+
+        // Render parking spaces in card views
+        function renderSpaces(spaces) {
+            const container = $('#spacesGrid');
+            container.empty();
+
+            if (spaces.length === 0) {
+                container.html('<p>No available spaces found.</p>');
+                return;
+            }
+
+            spaces.forEach(space => {
+                const card = `
+                    <div class="card" data-id="${space.id}" data-spot="${space.spotNumber}" data-location="${space.lotLocation}" data-pricing="${space.pricing}">
+                        <i class="fas fa-parking icon"></i>
+                        <h3>Spot ${space.spotNumber}</h3>
+                        <p>Location: ${space.lotLocation}</p>
+                        <p>Pricing: ${space.pricing} KSH</p>
+                    </div>
+                `;
+                container.append(card);
+            });
+        }
+
+        // Reset modal to default state
+        function resetModal() {
+            $('#bookingForm').hide();
+            $('#modalActions').show();
+            $('#customerName').val('');
+            $('#carNumber').val('');
+            $('#useDateTime').val('');
+        }
+    });
 </script>
+
+

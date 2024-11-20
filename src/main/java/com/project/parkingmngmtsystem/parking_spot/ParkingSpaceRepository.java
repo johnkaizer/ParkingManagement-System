@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ParkingSpaceRepository extends JpaRepository<ParkingSpace, Long> {
@@ -20,5 +21,7 @@ public interface ParkingSpaceRepository extends JpaRepository<ParkingSpace, Long
     List<ParkingSpace> findByIsOccupiedFalse();
 
     List<ParkingSpace> findByIsOccupied(boolean b);
+
+    Optional<Object> findBySpotNumber(Integer spotNumber);
 }
 

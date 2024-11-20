@@ -15,13 +15,15 @@ public class CarBooking {
     private Long id;
 
 
-    private String name;
+    private String customerName;
 
     private String carNumber;
 
     private Double amount;
 
-    private String parkingSpace;
+    private Integer spotNumber;
+
+    private String location;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime bookingDateTime;
@@ -32,8 +34,8 @@ public class CarBooking {
     @PrePersist
     @PreUpdate
     public void validateUseDateTime() {
-        if (useDateTime.isAfter(bookingDateTime.plusDays(3))) {
-            throw new IllegalArgumentException("Usage time cannot be more than 3 days from the booking time");
+        if (useDateTime.isAfter(bookingDateTime.plusDays(1))) {
+            throw new IllegalArgumentException("Usage time cannot be more than 24 hours from the booking time");
         }
     }
 }

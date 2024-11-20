@@ -1,5 +1,8 @@
 package com.project.parkingmngmtsystem.booking;
 
+import com.project.parkingmngmtsystem.parking_spot.ParkingSpace;
+import com.project.parkingmngmtsystem.parking_spot.ParkingSpaceService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,16 +12,34 @@ import java.util.List;
 @RequestMapping("/api/bookings")
 public class CarBookingController {
     private final CarBookingService carBookingService;
+    private final ParkingSpaceService parkingSpaceService;
 
-    public CarBookingController(CarBookingService carBookingService) {
+    public CarBookingController(CarBookingService carBookingService, ParkingSpaceService parkingSpaceService) {
         this.carBookingService = carBookingService;
+        this.parkingSpaceService = parkingSpaceService;
     }
 
     @PostMapping
-    public ResponseEntity<CarBooking> createBooking( @RequestBody CarBooking carBooking) {
-        CarBooking createdBooking = carBookingService.createBooking(carBooking);
-        return ResponseEntity.ok(createdBooking);
+    public ResponseEntity<String> createBooking(@RequestBody CarBooking booking) {
+        try {
+            carBookingService.createBooking(booking);
+
+            ParkingSpace parkingSpace = parkingSpaceService.findBySpotNumber(String.valueOf(booking.getSpotNumber()));
+            if (parkingSpace != null) {
+                parkingSpace.setOccupied(true);
+                parkingSpaceService.save(parkingSpace);
+            } else {
+                throw new RuntimeException("Parking spot not found");
+            }
+
+            return ResponseEntity.ok("Booking successful!");
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the exception for debugging
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
+
+
 
     @GetMapping
     public ResponseEntity<List<CarBooking>> getAllBookings() {

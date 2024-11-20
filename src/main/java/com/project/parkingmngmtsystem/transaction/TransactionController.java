@@ -1,6 +1,7 @@
 package com.project.parkingmngmtsystem.transaction;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,20 +31,21 @@ public class TransactionController {
         return transactionService.save(transaction);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id, @RequestBody Transaction transactionDetails) {
-        try {
-            Transaction updatedTransaction = transactionService.updateTransaction(id, transactionDetails);
-            return ResponseEntity.ok(updatedTransaction);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
         transactionService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/pay")
+    public ResponseEntity<String> payForParking(@RequestBody TransactionRequest transactionRequest) {
+        try {
+            transactionService.processPayment(transactionRequest);
+            return ResponseEntity.ok("Payment successful, spot marked as occupied.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body("Payment failed: " + e.getMessage());
+        }
+    }
+
 }
 

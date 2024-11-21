@@ -54,13 +54,13 @@ public class TransactionService {
         transactionRepository.save(transaction);
 
         // Fetch the parking space
-        Optional<ParkingSpace> parkingSpaceOpt = parkingSpaceRepository.findById(request.getSpaceId());
+        Optional<Object> parkingSpaceOpt = parkingSpaceRepository.findBySpotNumber(request.getSpaceId());
         if (parkingSpaceOpt.isEmpty()) {
             throw new RuntimeException("Parking space not found for ID: " + request.getSpaceId());
         }
 
         // Update parking space status
-        ParkingSpace parkingSpace = parkingSpaceOpt.get();
+        ParkingSpace parkingSpace = (ParkingSpace) parkingSpaceOpt.get();
         parkingSpace.setOccupied(true);
 
         // Log the parking space update

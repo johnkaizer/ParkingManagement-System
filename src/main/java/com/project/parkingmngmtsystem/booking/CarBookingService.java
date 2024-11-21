@@ -1,5 +1,8 @@
 package com.project.parkingmngmtsystem.booking;
 
+import com.project.parkingmngmtsystem.parking_spot.ParkingSpace;
+import com.project.parkingmngmtsystem.parking_spot.ParkingSpaceService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -10,6 +13,9 @@ import java.util.Map;
 @Service
 public class CarBookingService {
     private final CarBookingRepository carBookingRepository;
+
+    @Autowired
+    private ParkingSpaceService parkingSpaceService;
 
     public CarBookingService(CarBookingRepository carBookingRepository) {
         this.carBookingRepository = carBookingRepository;
@@ -40,20 +46,51 @@ public class CarBookingService {
     }
 
     public void deleteBooking(Long id) {
+        CarBooking booking = carBookingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        // Update parking space status
+        ParkingSpace space = parkingSpaceService.findBySpotNumber(booking.getSpotNumber());
+        if (space != null) {
+            space.setOccupied(false);
+            parkingSpaceService.save(space);
+        }
+
+        // Delete the booking
         carBookingRepository.deleteById(id);
     }
+
 
     public Map<String, Long> getDailyBookingTrends() {
         List<Object[]> trends = carBookingRepository.countDailyBookings();
         Map<String, Long> dailyTrends = new HashMap<>();
 
         for (Object[] trend : trends) {
-            String date = (String) trend[0]; // Assuming the first column is the date as a String
-            Long count = (Long) trend[1];   // Assuming the second column is the booking count
+            String date = (String) trend[0];
+            Long count = (Long) trend[1];
             dailyTrends.put(date, count);
         }
 
         return dailyTrends;
     }
+
+    public List<CarBooking> searchBookingsByName(String name) {
+        return carBookingRepository.findByCustomerNameContainingIgnoreCase(name);
+    }
+
+
+    public void cancelBooking(Long id) {
+        CarBooking booking = carBookingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        ParkingSpace space = parkingSpaceService.findBySpotNumber(booking.getSpotNumber());
+        if (space != null) {
+            space.setOccupied(false);
+            parkingSpaceService.save(space);
+        }
+
+        carBookingRepository.deleteById(id);
+    }
+
 }
 

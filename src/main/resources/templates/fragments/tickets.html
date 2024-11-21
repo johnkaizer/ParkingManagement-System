@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tickets</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <style>
+        html, body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tickets-container {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+            align-content: flex-start;
+        }
+
+        .ticket-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .ticket-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .ticket-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+            color: #333;
+            text-align: center;
+            width: 100%;
+        }
+
+        .ticket-details {
+            width: 100%;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .ticket-details div {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ticket-details .label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .qr-code {
+            margin: 10px 0;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+        }
+
+        .scan-text {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+            text-align: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .tickets-container {
+                padding: 10px;
+                gap: 15px;
+            }
+
+            .ticket-card {
+                width: calc(50% - 20px);
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ticket-card {
+                width: 100%;
+                margin: 0 10px;
+            }
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        .tickets-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .tickets-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .tickets-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .tickets-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="tickets-container" id="ticketsContainer">
+    <!-- Ticket cards will be dynamically loaded here -->
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Fetch logged-in user's ID
+        $.ajax({
+            url: '/api/users/profile',
+            method: 'GET',
+            success: function (user) {
+                const userId = user.id;
+                loadUserTickets(userId);
+            },
+            error: function () {
+                alert("Failed to fetch user profile.");
+            }
+        });
+
+        // Fetch and display tickets for the logged-in user
+        function loadUserTickets(userId) {
+            $.ajax({
+                url: '/api/transactions',
+                method: 'GET',
+                success: function (transactions) {
+                    const userTickets = transactions.filter(ticket => ticket.userId === userId);
+                    renderTickets(userTickets);
+                },
+                error: function () {
+                    alert("Failed to load tickets.");
+                }
+            });
+        }
+
+        // Render tickets into cards
+        // Render tickets into cards
+        function renderTickets(tickets) {
+            const container = $('#ticketsContainer');
+            container.empty();
+
+            if (tickets.length === 0) {
+                container.append('<p>No tickets found.</p>');
+                return;
+            }
+
+            tickets.forEach(ticket => {
+                const ticketId = `ticket-${ticket.id}`;
+                const qrData = `Ticket ID: ${ticket.id}, Vehicle: ${ticket.carNumber}, Space: ${ticket.spaceId}`;
+                const currentTime = new Date();
+                const endTime = new Date(ticket.endTime);
+
+                // Check if ticket has expired
+                const isExpired = currentTime > endTime;
+
+                const ticketCard = `
+            <div class="ticket-card ${isExpired ? 'expired' : ''}">
+                <h3>Ticket #${ticket.id}</h3>
+                <div class="ticket-details">
+                    <div><strong>Vehicle:</strong> ${ticket.carNumber}</div>
+                    <div><strong>Space ID:</strong> ${ticket.spaceId}</div>
+                    <div><strong>Start Time:</strong> ${new Date(ticket.startTime).toLocaleString()}</div>
+                    <div><strong>End Time:</strong> ${endTime.toLocaleString()}</div>
+                    <div><strong>Total Cost:</strong> Ksh ${ticket.totalCost.toFixed(2)}</div>
+                    <div><strong>Status:</strong> ${isExpired ? 'Expired' : 'Active'}</div>
+                </div>
+                <div class="qr-code" id="${ticketId}"></div>
+                <div class="scan-text">${isExpired ? 'Ticket Expired' : 'Submit for Scanning'}</div>
+            </div>
+        `;
+                container.append(ticketCard);
+
+                // Generate QR Code for active tickets only
+                if (!isExpired) {
+                    QRCode.toCanvas(document.getElementById(ticketId), qrData, function (error) {
+                        if (error) console.error("QR Code generation failed:", error);
+                    });
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

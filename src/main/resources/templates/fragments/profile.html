@@ -6,58 +6,63 @@
     <title>User Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body {
+        html, body {
             font-family: Arial, sans-serif;
             background-color: #f9f9f9;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            height: 100%;
+            overflow: hidden;
         }
 
         .container {
-            flex: 1;
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            background: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100%;
+            max-height: 100%;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            flex-shrink: 0;
         }
 
         .header h2 {
             font-size: 24px;
             color: #333;
+            margin: 0;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            padding: 15px;
         }
 
         .profile-info {
             display: flex;
             flex-direction: column;
+            width: 100%;
+            overflow-y: auto;
+            gap: 10px;
         }
 
-        .profile-info input {
-            padding: 10px;
-            margin-bottom: 10px;
+        .profile-info input,
+        .profile-info select {
+            padding: 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
             width: 100%;
             font-size: 16px;
-        }
-
-        .profile-info select {
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 100%;
+            box-sizing: border-box;
         }
 
         .profile-info .readonly {
@@ -65,66 +70,71 @@
             cursor: not-allowed;
         }
 
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background-color: #f1f1f1;
+            flex-shrink: 0;
+        }
+
         .btn {
-            padding: 10px 15px;
+            flex: 1;
+            max-width: 200px;
+            padding: 12px 15px;
             border: none;
             border-radius: 4px;
             color: white;
             cursor: pointer;
-            text-align: center;
-            background-color: #4CAF50;
             font-size: 16px;
-            margin-top: 20px;
+            transition: background-color 0.3s ease;
         }
 
         .btn.cancel {
             background-color: #FF0000;
-            margin-left: 10px;
         }
 
         .btn.save {
             background-color: #4CAF50;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 500px;
-            max-width: 90%;
-            box-sizing: border-box;
+        .btn:hover {
+            opacity: 0.9;
         }
 
-        .modal.show {
-            display: block;
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h2 {
+                font-size: 20px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 10px;
+            }
         }
 
-        .modal-header {
-            font-size: 18px;
-            margin-bottom: 20px;
-            text-align: center;
+        /* Scrollbar styling for modern browsers */
+        .profile-info::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
+        .profile-info::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
 
-        .overlay.show {
-            display: block;
+        .profile-info::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .profile-info::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
     </style>
 </head>
@@ -148,15 +158,6 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="overlay" id="modal-overlay"></div>
-<div class="modal" id="profile-modal">
-    <div class="modal-header">Edit Profile</div>
-    <div class="modal-body">
-        <!-- Content will be dynamically loaded -->
-    </div>
-</div>
-
 <script>
     (() => {
         const saveBtn = document.getElementById('save-btn');
@@ -176,7 +177,6 @@
                     contactField.value = data.contact;
                     vehicleNumberField.value = data.vehicleNumber;
                     vehicleTypeField.value = data.vehicleType;
-                    // No need to update role as it cannot be edited
                     roleField.value = data.role;
                 } else {
                     alert("Failed to fetch user profile");
@@ -214,12 +214,15 @@
         }
 
         saveBtn.addEventListener("click", saveUserProfile);
-        cancelBtn.addEventListener("click", () => fetchUserProfile());
+        cancelBtn.addEventListener("click", fetchUserProfile);
 
-        // Fetch user profile on page load
-        document.addEventListener("DOMContentLoaded", fetchUserProfile);
+        // Ensure profile is fetched on page load
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", fetchUserProfile);
+        } else {
+            fetchUserProfile();
+        }
     })();
 </script>
-
 </body>
 </html>

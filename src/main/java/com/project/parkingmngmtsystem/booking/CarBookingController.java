@@ -25,7 +25,7 @@ public class CarBookingController {
         try {
             carBookingService.createBooking(booking);
 
-            ParkingSpace parkingSpace = parkingSpaceService.findBySpotNumber(String.valueOf(booking.getSpotNumber()));
+            ParkingSpace parkingSpace = parkingSpaceService.findBySpotNumber(booking.getSpotNumber());
             if (parkingSpace != null) {
                 parkingSpace.setOccupied(true);
                 parkingSpaceService.save(parkingSpace);
@@ -68,4 +68,15 @@ public class CarBookingController {
         Map<String, Long> dailyTrends = carBookingService.getDailyBookingTrends();
         return ResponseEntity.ok(dailyTrends);
     }
+    @GetMapping("/search")
+    public ResponseEntity<List<CarBooking>> searchBookingsByName(@RequestParam String name) {
+        List<CarBooking> bookings = carBookingService.searchBookingsByName(name);
+        return ResponseEntity.ok(bookings);
+    }
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancelBooking(@PathVariable Long id) {
+        carBookingService.cancelBooking(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -14,18 +14,20 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .container {
             flex: 1;
+            width: 100%;
             max-width: 1200px;
-            margin: 20px auto;
+            margin: 0 auto;
             padding: 20px;
             background: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .header {
@@ -33,29 +35,42 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .header h2 {
             font-size: 24px;
             color: #333;
+            margin: 0;
         }
 
         .search-bar {
             display: flex;
             align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
         }
 
         .search-bar input {
+            flex: 1;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            width: 250px;
+            min-width: 0;
+        }
+
+        .table-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+            margin-top: 20px;
         }
 
         table {
             width: 100%;
+            min-width: 800px; /* Ensures table is readable on smaller screens */
             border-collapse: collapse;
-            margin-top: 20px;
         }
 
         table th, table td {
@@ -67,14 +82,13 @@
         table th {
             background-color: #4CAF50;
             color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         table tbody tr:hover {
             background-color: #f1f1f1;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
         }
 
         .btn {
@@ -84,6 +98,7 @@
             color: white;
             cursor: pointer;
             text-align: center;
+            transition: background-color 0.3s ease;
         }
 
         .btn.add {
@@ -154,6 +169,36 @@
         .overlay.show {
             display: block;
         }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .search-bar {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-bar input {
+                width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            table th, table td {
+                padding: 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -209,15 +254,15 @@
         // Fetch parking spaces from the API
         async function fetchParkingSpaces() {
             try {
-                const response = await fetch("/api/parking-spaces"); // Fetch data from the server
+                const response = await fetch("/api/parking-spaces");
                 if (!response.ok) {
                     throw new Error(`Failed to fetch parking spaces: ${response.statusText}`);
                 }
-                const data = await response.json(); // Parse the JSON response
-                renderTable(data); // Render the table
+                const data = await response.json();
+                renderTable(data);
             } catch (error) {
                 console.error("Error fetching parking spaces:", error);
-                renderTable([]); // Clear the table or display a fallback
+                renderTable([]);
             }
         }
 
@@ -244,16 +289,16 @@
             </tr>
         `).join('');
 
-            bindTableEventListeners(); // Bind edit and delete listeners
+            bindTableEventListeners();
         }
 
         // Bind event listeners to dynamically created edit/delete buttons
         function bindTableEventListeners() {
             document.querySelectorAll(".btn.edit").forEach(btn =>
-                btn.addEventListener("click", () => editParkingSpace(btn.dataset.parkingSpaceId))
+                btn.addEventListener("click", () => editParkingSpace(btn.dataset.id))
             );
             document.querySelectorAll(".btn.delete").forEach(btn =>
-                btn.addEventListener("click", () => deleteParkingSpace(btn.dataset.parkingSpaceId))
+                btn.addEventListener("click", () => deleteParkingSpace(btn.dataset.id))
             );
         }
 
@@ -301,21 +346,21 @@
                     throw new Error("Failed to save parking space");
                 }
 
-                await fetchParkingSpaces(); // Refresh the table
-                hideModal(); // Close the modal
+                await fetchParkingSpaces();
+                hideModal();
             } catch (error) {
                 console.error("Error saving parking space:", error);
             }
         }
 
-        // Delete a parking space
+        // Edit a parking space
         async function editParkingSpace(parkingSpaceId) {
             if (!parkingSpaceId) {
                 console.error("Invalid ID for editing parking space");
                 return;
             }
             try {
-                const response = await fetch(`/api/parking-spaces/${iparkingSpaceId}`);
+                const response = await fetch(`/api/parking-spaces/${parkingSpaceId}`);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch parking space: ${response.statusText}`);
                 }
@@ -326,6 +371,7 @@
             }
         }
 
+        // Delete a parking space
         async function deleteParkingSpace(parkingSpaceId) {
             if (!parkingSpaceId) {
                 console.error("Invalid ID for deleting parking space");
@@ -342,14 +388,13 @@
             }
         }
 
-
         // Event listeners
         document.getElementById("add-spot-btn").addEventListener("click", () => showModal());
         document.getElementById("cancel-btn").addEventListener("click", hideModal);
         document.getElementById("save-btn").addEventListener("click", saveParkingSpace);
 
         // Fetch spaces on page load
-         fetchParkingSpaces();
+        fetchParkingSpaces();
     })();
 
 </script>

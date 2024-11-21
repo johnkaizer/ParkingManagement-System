@@ -17,7 +17,7 @@ public class Transaction {
 
     private Long userId;
 
-    private Long spaceId;
+    private Integer spaceId;
     private String carNumber;
 
     private LocalDateTime startTime;

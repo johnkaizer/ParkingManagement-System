@@ -14,4 +14,6 @@ public interface CarBookingRepository extends JpaRepository<CarBooking, Long> {
             "GROUP BY CAST(cb.bookingDateTime AS date) " +
             "ORDER BY totalBookings")
     List<Object[]> countDailyBookings();
+
+    List<CarBooking> findByCustomerNameContainingIgnoreCase(String name);
 }

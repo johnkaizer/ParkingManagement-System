@@ -86,10 +86,11 @@ public class ParkingSpaceService {
         return spacesWithPricing;
     }
 
-    public ParkingSpace findBySpotNumber(String spotNumber) {
-        return (ParkingSpace) parkingSpaceRepository.findBySpotNumber(Integer.valueOf(spotNumber))
-                .orElseThrow(() -> new RuntimeException("Parking spot not found"));
+    public ParkingSpace findBySpotNumber(Integer spotNumber) {
+        return (ParkingSpace) parkingSpaceRepository.findBySpotNumber(spotNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Parking space not found"));
     }
+
 
 }
 

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        .report-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: 400px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="report-header">
+        <h1>Admin Report</h1>
+        <p>View booking statistics and generate a report</p>
+    </div>
+
+    <!-- Pie Chart Section -->
+    <div>
+        <canvas id="bookingReportChart"></canvas>
+    </div>
+
+    <div class="button-container">
+        <button id="generatePdfBtn">Generate PDF</button>
+        <button id="refreshChartBtn">Refresh Data</button>
+    </div>
+</div>
+
+<script>
+    class ReportManager {
+        constructor() {
+            this.chart = null;
+            this.chartData = null;
+        }
+
+        // Initialize chart
+        initChart() {
+            const ctx = document.getElementById('bookingReportChart').getContext('2d');
+            this.chartData = {
+                labels: ['Bookings', 'Available Spots', 'Cancelled Bookings'],
+                datasets: [{
+                    label: 'Booking Statistics',
+                    data: [120, 80, 30], // Example data
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                    hoverBackgroundColor: ['#FF8F99', '#6CC7F2', '#FFDD80'],
+                    borderWidth: 1
+                }]
+            };
+
+            this.chart = new Chart(ctx, {
+                type: 'pie',
+                data: this.chartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.label + ': ' + tooltipItem.raw;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update chart with fresh data
+        updateChartData(newData) {
+            this.chartData.datasets[0].data = newData;
+            this.chart.update();
+        }
+
+        // Generate a PDF from the report data
+        generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.text('Admin Booking Report', 10, 10);
+            doc.text('Booking Statistics:', 10, 20);
+
+            // Add Pie chart image to PDF (You need to render the chart as base64)
+            const chartImage = this.chart.toBase64Image();
+            doc.addImage(chartImage, 'PNG', 10, 30, 180, 160); // Position and size the image
+            doc.text('Bookings: 120', 10, 200); // Example text, replace with actual values
+            doc.text('Available Spots: 80', 10, 210); // Example text
+            doc.text('Cancelled Bookings: 30', 10, 220); // Example text
+
+            doc.save('report.pdf');
+        }
+    }
+
+    // Initialize the report manager
+    const reportManager = new ReportManager();
+    reportManager.initChart();
+
+    // Attach event listeners to buttons
+    document.getElementById('generatePdfBtn').addEventListener('click', function () {
+        reportManager.generatePDF();
+    });
+
+    document.getElementById('refreshChartBtn').addEventListener('click', function () {
+        // Fetch new data and update chart
+        // For now, we just update with example data
+        reportManager.updateChartData([150, 50, 20]); // Example updated data
+    });
+</script>
+
+</body>
+</html>

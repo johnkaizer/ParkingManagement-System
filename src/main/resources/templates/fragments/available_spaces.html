@@ -122,7 +122,6 @@
         // Placeholder for payment functionality
         $('#payButton').on('click', function () {
             const parkingSpaceId = selectedSpot.spotNumber; // Retrieve parking space ID
-            const carNumber = localStorage.getItem('loggedUserCarNumber');  // Retrieve car number from localStorage
             const totalCost = selectedSpot.pricing;  // Retrieve total cost for the selected spot
 
             // Log all values to check
@@ -131,7 +130,7 @@
             console.log('Total Cost:', totalCost);
 
             // Check if any required value is missing
-            if (!parkingSpaceId || !carNumber || !totalCost) {
+            if (!parkingSpaceId || !totalCost) {
                 console.error('Missing required fields');
                 alert('All fields are required!');
                 return;
@@ -139,7 +138,7 @@
 
             // Fetch user details from the backend
             $.ajax({
-                url: '/api/profile',
+                url: '/api/users/profile',
                 method: 'GET',
                 success: function (userResponse) {
                     // Log the user details
@@ -147,6 +146,7 @@
 
                     // Get the user ID from the response
                     const userId = userResponse.id;
+                    const carNumber = userResponse.vehicleNumber;
 
                     // Prepare the payment request data
                     const startTime = new Date().toISOString(); // Current date-time

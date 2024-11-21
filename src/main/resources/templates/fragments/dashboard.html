@@ -76,19 +76,19 @@
     </div>
     <div class="stats-container">
         <div class="stat-card">
-            <h2 id="total-users">50</h2>
+            <h2 id="total-users">0</h2>
             <p>Total Users</p>
         </div>
         <div class="stat-card">
-            <h2 id="total-spots">100</h2>
+            <h2 id="total-spots">0</h2>
             <p>Total Parking Spots</p>
         </div>
         <div class="stat-card">
-            <h2 id="available-spots">30</h2>
+            <h2 id="available-spots">0</h2>
             <p>Available Spots</p>
         </div>
         <div class="stat-card">
-            <h2 id="total-amount">KES 25,000</h2>
+            <h2 id="total-amount">KES 0</h2>
             <p>Total Amount from Bookings</p>
         </div>
     </div>
@@ -99,58 +99,89 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Hardcoded data
-    const stats = {
-        totalUsers: 50,
-        totalSpots: 100,
-        availableSpots: 30,
-        totalAmount: 25000
-    };
+    (function () {
+        // Define API endpoints
+        const endpoints = {
+            totalSpots: '/api/parking-spaces/total',
+            availableSpots: '/api/parking-spaces/unoccupied',
+            totalUsers: '/api/users/total',
+            totalAmount: '/api/transactions/total-amount',
+            dailyBookings: '/api/bookings/daily-trends'
+        };
 
-    // Update the stats dynamically (if fetched from backend in the future)
-    document.getElementById('total-users').textContent = stats.totalUsers;
-    document.getElementById('total-spots').textContent = stats.totalSpots;
-    document.getElementById('available-spots').textContent = stats.availableSpots;
-    document.getElementById('total-amount').textContent = `KES ${stats.totalAmount}`;
+        // Fetch and update stats
+        async function fetchStats() {
+            try {
+                const [totalSpots, availableSpots, totalUsers, totalAmount] = await Promise.all([
+                    fetch(endpoints.totalSpots).then(res => res.json()),
+                    fetch(endpoints.availableSpots).then(res => res.json()),
+                    fetch(endpoints.totalUsers).then(res => res.json()),
+                    fetch(endpoints.totalAmount).then(res => res.json())
+                ]);
 
-    // Chart.js configuration
-    const ctx = document.getElementById('bookingsChart').getContext('2d');
-    const bookingsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            datasets: [{
-                label: 'Daily Bookings',
-                data: [10, 15, 7, 20, 25, 18, 30], // Hardcoded data for now
-                borderColor: '#4CAF50',
-                fill: false,
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Days of the Week'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Number of Bookings'
-                    }
-                }
+                document.getElementById('total-users').textContent = totalUsers;
+                document.getElementById('total-spots').textContent = totalSpots;
+                document.getElementById('available-spots').textContent = availableSpots;
+                document.getElementById('total-amount').textContent = `KES ${totalAmount}`;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
             }
         }
-    });
+
+        // Fetch and render booking trends
+        async function renderBookingTrends() {
+            try {
+                const data = await fetch(endpoints.dailyBookings).then(res => res.json());
+                const ctx = document.getElementById('bookingsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels, // Days of the week
+                        datasets: [{
+                            label: 'Daily Bookings',
+                            data: data.values, // Daily bookings data
+                            borderColor: '#4CAF50',
+                            fill: false,
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Days of the Week'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Number of Bookings'
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error rendering booking trends:', error);
+            }
+        }
+
+        // Initialize dashboard
+        function initDashboard() {
+            fetchStats();
+            renderBookingTrends();
+        }
+
+        // Call initialization
+        initDashboard();
+    })();
 </script>
 </body>
-</html>

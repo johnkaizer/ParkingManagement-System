@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -61,5 +62,10 @@ public class CarBookingController {
     public ResponseEntity<Void> deleteBooking(@PathVariable Long id) {
         carBookingService.deleteBooking(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/daily-trends")
+    public ResponseEntity<Map<String, Long>> getDailyBookingTrends() {
+        Map<String, Long> dailyTrends = carBookingService.getDailyBookingTrends();
+        return ResponseEntity.ok(dailyTrends);
     }
 }

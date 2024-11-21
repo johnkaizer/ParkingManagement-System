@@ -74,5 +74,9 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    public long getTotalUsers() {
+        return userRepository.count();
+    }
+
 }
 

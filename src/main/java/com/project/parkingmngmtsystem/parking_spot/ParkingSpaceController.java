@@ -53,7 +53,7 @@ public class ParkingSpaceController {
         return ResponseEntity.ok(totalSpaces);
     }
 
-    // Endpoint to get the number of unoccupied parking spaces
+    // Endpoint to get the number of Available parking spaces
     @GetMapping("/unoccupied")
     public ResponseEntity<Long> getUnoccupiedParkingSpacesCount() {
         long unoccupiedSpaces = parkingSpaceService.getUnoccupiedParkingSpacesCount();

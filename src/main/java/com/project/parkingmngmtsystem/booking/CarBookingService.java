@@ -3,7 +3,9 @@ package com.project.parkingmngmtsystem.booking;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CarBookingService {
@@ -39,6 +41,19 @@ public class CarBookingService {
 
     public void deleteBooking(Long id) {
         carBookingRepository.deleteById(id);
+    }
+
+    public Map<String, Long> getDailyBookingTrends() {
+        List<Object[]> trends = carBookingRepository.countDailyBookings();
+        Map<String, Long> dailyTrends = new HashMap<>();
+
+        for (Object[] trend : trends) {
+            String date = (String) trend[0]; // Assuming the first column is the date as a String
+            Long count = (Long) trend[1];   // Assuming the second column is the booking count
+            dailyTrends.put(date, count);
+        }
+
+        return dailyTrends;
     }
 }
 

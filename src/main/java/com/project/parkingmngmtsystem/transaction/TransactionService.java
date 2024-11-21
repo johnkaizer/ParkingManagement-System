@@ -40,6 +40,9 @@ public class TransactionService {
 
 
     public void processPayment(TransactionRequest request) {
+        // Log the incoming request for debugging
+        System.out.println("Processing payment for space ID: " + request.getSpaceId());
+
         // Save transaction details
         Transaction transaction = new Transaction();
         transaction.setUserId(request.getUserId());
@@ -50,10 +53,24 @@ public class TransactionService {
         transaction.setTotalCost(request.getTotalCost());
         transactionRepository.save(transaction);
 
+        // Fetch the parking space
+        Optional<ParkingSpace> parkingSpaceOpt = parkingSpaceRepository.findById(request.getSpaceId());
+        if (parkingSpaceOpt.isEmpty()) {
+            throw new RuntimeException("Parking space not found for ID: " + request.getSpaceId());
+        }
+
         // Update parking space status
-        ParkingSpace parkingSpace = parkingSpaceRepository.findById(request.getSpaceId())
-                .orElseThrow(() -> new RuntimeException("Parking space not found"));
+        ParkingSpace parkingSpace = parkingSpaceOpt.get();
         parkingSpace.setOccupied(true);
+
+        // Log the parking space update
+        System.out.println("Updating parking space " + parkingSpace.getParkingSpaceId() + " to occupied.");
+
         parkingSpaceRepository.save(parkingSpace);
     }
+
+    public Double getTotalAmount() {
+        return transactionRepository.sumTotalCost();
+    }
+
 }

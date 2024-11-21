@@ -1,7 +1,6 @@
 package com.project.parkingmngmtsystem.transaction;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,5 +46,10 @@ public class TransactionController {
         }
     }
 
+    // New Endpoint to get the total amount from all transactions
+    @GetMapping("/total-amount")
+    public ResponseEntity<Double> getTotalAmount() {
+        Double totalAmount = transactionService.getTotalAmount();
+        return ResponseEntity.ok(totalAmount);
+    }
 }
-

@@ -6,6 +6,7 @@ import com.project.parkingmngmtsystem.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,33 +41,36 @@ public class TransactionService {
 
 
     public void processPayment(TransactionRequest request) {
-        // Log the incoming request for debugging
         System.out.println("Processing payment for space ID: " + request.getSpaceId());
 
-        // Save transaction details
+        // Validate time range
+        // Validate time range
+        if (request.getStartTime().isAfter(request.getEndTime())) {
+            throw new RuntimeException("Start time must be before end time.");
+        }
+
+        // Optional: Recalculate end time based on fixed duration (e.g., 3 hours)
+        LocalDateTime startTime = request.getStartTime();
+        LocalDateTime endTime = startTime.plusHours(3); // Fixed duration
+
+        // Save transaction
         Transaction transaction = new Transaction();
         transaction.setUserId(request.getUserId());
         transaction.setSpaceId(request.getSpaceId());
         transaction.setCarNumber(request.getCarNumber());
-        transaction.setStartTime(request.getStartTime());
-        transaction.setEndTime(request.getEndTime());
+        transaction.setStartTime(startTime);
+        transaction.setEndTime(endTime);
         transaction.setTotalCost(request.getTotalCost());
         transactionRepository.save(transaction);
 
-        // Fetch the parking space
-        Optional<Object> parkingSpaceOpt = parkingSpaceRepository.findBySpotNumber(request.getSpaceId());
-        if (parkingSpaceOpt.isEmpty()) {
-            throw new RuntimeException("Parking space not found for ID: " + request.getSpaceId());
-        }
+        // Update parking space
+        ParkingSpace parkingSpace = (ParkingSpace) parkingSpaceRepository.findBySpotNumber(request.getSpaceId())
+                .orElseThrow(() -> new RuntimeException("Parking space not found for ID: " + request.getSpaceId()));
 
-        // Update parking space status
-        ParkingSpace parkingSpace = (ParkingSpace) parkingSpaceOpt.get();
         parkingSpace.setOccupied(true);
-
-        // Log the parking space update
-        System.out.println("Updating parking space " + parkingSpace.getParkingSpaceId() + " to occupied.");
-
         parkingSpaceRepository.save(parkingSpace);
+
+        System.out.println("Payment processed successfully. Parking space " + parkingSpace.getParkingSpaceId() + " is now occupied.");
     }
 
     public Double getTotalAmount() {

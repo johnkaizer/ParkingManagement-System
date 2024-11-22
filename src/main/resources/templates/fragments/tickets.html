@@ -187,37 +187,31 @@
             tickets.forEach(ticket => {
                 const ticketId = `ticket-${ticket.id}`;
                 const qrData = `Ticket ID: ${ticket.id}, Vehicle: ${ticket.carNumber}, Space: ${ticket.spaceId}`;
-                const currentTime = new Date();
-                const endTime = new Date(ticket.endTime);
-
-                // Check if ticket has expired
-                const isExpired = currentTime > endTime;
 
                 const ticketCard = `
-            <div class="ticket-card ${isExpired ? 'expired' : ''}">
+            <div class="ticket-card">
                 <h3>Ticket #${ticket.id}</h3>
                 <div class="ticket-details">
                     <div><strong>Vehicle:</strong> ${ticket.carNumber}</div>
                     <div><strong>Space ID:</strong> ${ticket.spaceId}</div>
                     <div><strong>Start Time:</strong> ${new Date(ticket.startTime).toLocaleString()}</div>
-                    <div><strong>End Time:</strong> ${endTime.toLocaleString()}</div>
+                    <div><strong>End Time:</strong> ${new Date(ticket.startTime() + 4 * 60 * 60 * 1000).toLocaleString()}</div>
                     <div><strong>Total Cost:</strong> Ksh ${ticket.totalCost.toFixed(2)}</div>
-                    <div><strong>Status:</strong> ${isExpired ? 'Expired' : 'Active'}</div>
+                    <div><strong>Status:</strong> Active</div>
                 </div>
                 <div class="qr-code" id="${ticketId}"></div>
-                <div class="scan-text">${isExpired ? 'Ticket Expired' : 'Submit for Scanning'}</div>
+                <div class="scan-text">Submit for Scanning</div>
             </div>
         `;
                 container.append(ticketCard);
 
-                // Generate QR Code for active tickets only
-                if (!isExpired) {
-                    QRCode.toCanvas(document.getElementById(ticketId), qrData, function (error) {
-                        if (error) console.error("QR Code generation failed:", error);
-                    });
-                }
+                // Generate QR Code for all tickets
+                QRCode.toCanvas(document.getElementById(ticketId), qrData, function (error) {
+                    if (error) console.error("QR Code generation failed:", error);
+                });
             });
         }
+
     });
 </script>
 </body>

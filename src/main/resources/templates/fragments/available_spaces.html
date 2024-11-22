@@ -126,7 +126,6 @@
 
             // Log all values to check
             console.log('Parking Space ID:', parkingSpaceId);
-            console.log('Car Number:', carNumber);
             console.log('Total Cost:', totalCost);
 
             // Check if any required value is missing
@@ -149,8 +148,8 @@
                     const carNumber = userResponse.vehicleNumber;
 
                     // Prepare the payment request data
-                    const startTime = new Date().toISOString(); // Current date-time
-                    const endTime = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(); // 3 hours after the current time
+                    const startTime = new Date().toDateString(); // Current date-time as a Date object
+                    const endTime = new Date(startTime.getTime() + 4 * 60 * 60 * 1000); // Add 3 hours to startTime
 
                     // Proceed with the payment request using the fetched user data
                     $.ajax({
@@ -180,6 +179,7 @@
                 }
             });
         });
+
 
         // Fetch and display all unoccupied parking spaces with pricing
         function fetchUnoccupiedSpaces() {

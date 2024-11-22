@@ -191,14 +191,15 @@
                 const ticketCard = `
             <div class="ticket-card">
                 <h3>Ticket #${ticket.id}</h3>
-                <div class="ticket-details">
-                    <div><strong>Vehicle:</strong> ${ticket.carNumber}</div>
-                    <div><strong>Space ID:</strong> ${ticket.spaceId}</div>
-                    <div><strong>Start Time:</strong> ${new Date(ticket.startTime).toLocaleString()}</div>
-                    <div><strong>End Time:</strong> ${new Date(ticket.startTime() + 4 * 60 * 60 * 1000).toLocaleString()}</div>
-                    <div><strong>Total Cost:</strong> Ksh ${ticket.totalCost.toFixed(2)}</div>
-                    <div><strong>Status:</strong> Active</div>
-                </div>
+               <div class="ticket-details">
+    <div><strong>Vehicle:</strong> ${ticket.carNumber}</div>
+    <div><strong>Space ID:</strong> ${ticket.spaceId}</div>
+    <div><strong>Start Time:</strong> ${new Date(ticket.startTime).toLocaleString()}</div>
+    <div><strong>End Time:</strong> ${new Date(new Date(ticket.startTime).getTime() + 3 * 60 * 60 * 1000).toLocaleString()}</div>
+    <div><strong>Total Cost:</strong> Ksh ${ticket.totalCost.toFixed(2)}</div>
+    <div><strong>Status:</strong> Active</div>
+</div>
+
                 <div class="qr-code" id="${ticketId}"></div>
                 <div class="scan-text">Submit for Scanning</div>
             </div>

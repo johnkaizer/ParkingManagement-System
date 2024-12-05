@@ -99,6 +99,22 @@
             text-align: center;
         }
 
+        .delete-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .delete-button:hover {
+            background-color: darkred;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .tickets-container {
@@ -174,7 +190,6 @@
         }
 
         // Render tickets into cards
-        // Render tickets into cards
         function renderTickets(tickets) {
             const container = $('#ticketsContainer');
             container.empty();
@@ -191,17 +206,20 @@
                 const ticketCard = `
             <div class="ticket-card">
                 <h3>Ticket #${ticket.id}</h3>
-               <div class="ticket-details">
-    <div><strong>Vehicle:</strong> ${ticket.carNumber}</div>
-    <div><strong>Space ID:</strong> ${ticket.spaceId}</div>
-    <div><strong>Start Time:</strong> ${new Date(ticket.startTime).toLocaleString()}</div>
-    <div><strong>End Time:</strong> ${new Date(new Date(ticket.startTime).getTime() + 3 * 60 * 60 * 1000).toLocaleString()}</div>
-    <div><strong>Total Cost:</strong> Ksh ${ticket.totalCost.toFixed(2)}</div>
-    <div><strong>Status:</strong> Active</div>
-</div>
+                <div class="ticket-details">
+                    <div><strong>Vehicle:</strong> ${ticket.carNumber}</div>
+                    <div><strong>Space ID:</strong> ${ticket.spaceId}</div>
+                    <div><strong>Start Time:</strong> ${new Date(ticket.startTime).toLocaleString()}</div>
+                    <div><strong>End Time:</strong> ${new Date(new Date(ticket.startTime).getTime() + 3 * 60 * 60 * 1000).toLocaleString()}</div>
+                    <div><strong>Total Cost:</strong> Ksh ${ticket.totalCost.toFixed(2)}</div>
+                    <div><strong>Status:</strong> Active</div>
+                </div>
 
-                <div class="qr-code" id="${ticketId}"></div>
+                <div class="qr-code" id="ticket-${ticket.id}"></div>
                 <div class="scan-text">Submit for Scanning</div>
+
+                <!-- Delete Button -->
+                <button class="delete-button" data-ticket-id="${ticket.id}">Delete</button>
             </div>
         `;
                 container.append(ticketCard);
@@ -211,8 +229,29 @@
                     if (error) console.error("QR Code generation failed:", error);
                 });
             });
+
+            // Handle delete button click
+            $('.delete-button').click(function () {
+                const ticketId = $(this).data('ticket-id');
+                deleteTicket(ticketId);
+            });
         }
 
+        // Delete ticket function
+        function deleteTicket(ticketId) {
+            $.ajax({
+                url: `/api/transactions/${ticketId}`,
+                method: 'DELETE',
+                success: function () {
+                    alert('Ticket deleted successfully.');
+                    $(`#ticket-${ticketId}`).remove();
+                    loadUserTickets();// Remove the ticket card from the UI
+                },
+                error: function () {
+                    alert("Failed to delete ticket.");
+                }
+            });
+        }
     });
 </script>
 </body>

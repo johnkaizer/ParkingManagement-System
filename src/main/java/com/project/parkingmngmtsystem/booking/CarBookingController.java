@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +24,17 @@ public class CarBookingController {
     @PostMapping
     public ResponseEntity<String> createBooking(@RequestBody CarBooking booking) {
         try {
+            // Validate useDateTime
+            if (booking.getUseDateTime() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Use date and time is required.");
+            }
+            if (booking.getUseDateTime().isBefore(LocalDateTime.now())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Use date and time cannot be in the past.");
+            }
+            if (booking.getUseDateTime().isAfter(LocalDateTime.now().plusDays(10))) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You can only book up to 14 days in advance.");
+            }
+
             carBookingService.createBooking(booking);
 
             ParkingSpace parkingSpace = parkingSpaceService.findBySpotNumber(booking.getSpotNumber());
@@ -39,9 +51,6 @@ public class CarBookingController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-
-
-
     @GetMapping
     public ResponseEntity<List<CarBooking>> getAllBookings() {
         return ResponseEntity.ok(carBookingService.getAllBookings());
@@ -74,9 +83,14 @@ public class CarBookingController {
         return ResponseEntity.ok(bookings);
     }
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<Void> cancelBooking(@PathVariable Long id) {
-        carBookingService.cancelBooking(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> cancelBooking(@PathVariable Long id) {
+        try {
+            carBookingService.cancelBooking(id);
+            return ResponseEntity.ok("Booking canceled successfully.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
+
 
 }

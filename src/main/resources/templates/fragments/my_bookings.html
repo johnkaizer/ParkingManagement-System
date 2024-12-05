@@ -167,6 +167,7 @@
             <th>Location</th>
             <th>Booking Date</th>
             <th>Use Date</th>
+            <th>Expiry Time</th>
             <th>Status</th>
             <th>Actions</th>
         </tr>
@@ -176,7 +177,6 @@
         </tbody>
     </table>
 </div>
-
 <script>
     (function () {
         let loggedInUserName = ""; // Replace with the name from your user profile API.
@@ -202,7 +202,12 @@
             tableBody.empty();
 
             bookings.forEach(booking => {
-                const isActive = new Date(booking.useDateTime) > new Date() ? "Active" : "Expired";
+                const now = new Date();
+                const useDateTime = new Date(booking.useDateTime);
+                const timeDifference = (useDateTime - now) / (1000 * 60 * 60); // Difference in hours
+                const isActive = useDateTime > now ? "Active" : "Expired";
+                const disableButtons = timeDifference <= 5; // Disable buttons if 5 hours or less
+
                 tableBody.append(`
                     <tr>
                         <td>${booking.id}</td>
@@ -212,12 +217,17 @@
                         <td>${booking.location}</td>
                         <td>${new Date(booking.bookingDateTime).toLocaleString()}</td>
                         <td>${new Date(booking.useDateTime).toLocaleString()}</td>
+                        <td>${new Date(booking.expiryDateTime).toLocaleString()}</td>
                         <td>${isActive}</td>
                         <td>
-                            <button class="cancel-booking" data-id="${booking.id}" ${isActive === "Expired" ? "disabled" : ""}>
+                            <button class="cancel-booking" data-id="${booking.id}"
+                                ${isActive === "Expired" || disableButtons ? "disabled" : ""}>
                                 Cancel
                             </button>
-                            <button class="delete-booking" data-id="${booking.id}">Delete</button>
+                            <button class="delete-booking" data-id="${booking.id}"
+                                ${disableButtons ? "disabled" : ""}>
+                                Delete
+                            </button>
                         </td>
                     </tr>
                 `);
@@ -239,7 +249,6 @@
                 }
             });
         });
-
 
         // Delete Booking
         $(document).on('click', '.delete-booking', function () {

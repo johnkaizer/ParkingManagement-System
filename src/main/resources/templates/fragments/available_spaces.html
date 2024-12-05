@@ -1,3 +1,19 @@
+<div class="summary-table-container">
+    <h2>Parking Lot Summary</h2>
+    <table id="summaryTable">
+        <thead>
+        <tr>
+            <th>Location</th>
+            <th>Total Spots</th>
+            <th>Unoccupied Spots</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Rows will be dynamically populated -->
+        </tbody>
+    </table>
+</div>
+
 <div class="available-spaces-container">
     <h2>Available Parking Spaces</h2>
     <div class="search-bar">
@@ -8,6 +24,7 @@
         <!-- Cards will be dynamically added here -->
     </div>
 </div>
+
 
 <!-- Modal for booking -->
 <div id="actionModal" class="modal" style="display: none;">
@@ -92,7 +109,20 @@
                 return;
             }
 
-            const bookingDateTime = new Date().toISOString(); // Generate the current date-time
+            const now = new Date();
+            const useDateTimeObj = new Date(useDateTime);
+
+            if (useDateTimeObj <= now) {
+                alert('Check-in time must be in the future.');
+                return;
+            }
+
+            if (useDateTimeObj > now.setDate(now.getDate() + 10)) {
+                alert('You can only book a spot up to 10 days in advance.');
+                return;
+            }
+
+            const expiryTime = new Date(useDateTimeObj.getTime() + 4 * 60 * 60 * 1000).toISOString();
 
             $.ajax({
                 url: '/api/bookings',
@@ -104,8 +134,9 @@
                     spotNumber: selectedSpot.spotNumber,
                     location: selectedSpot.location,
                     amount: selectedSpot.pricing,
+                    bookingDateTime: new Date().toISOString(),
                     useDateTime,
-                    bookingDateTime,
+                    expiryTime,
                 }),
                 success: function () {
                     alert('Booking successful!');
@@ -118,7 +149,7 @@
             });
         });
 
-
+        
         // Placeholder for payment functionality
         $('#payButton').on('click', function () {
             const parkingSpaceId = selectedSpot.spotNumber; // Retrieve parking space ID
@@ -217,6 +248,46 @@
                 },
             });
         }
+        $(document).ready(function () {
+            // Fetch parking summary data on page load
+            fetchParkingSummary();
+
+            // Function to fetch parking summary
+            function fetchParkingSummary() {
+                $.ajax({
+                    url: '/api/parking-spaces/summary',
+                    method: 'GET',
+                    success: function (data) {
+                        renderSummaryTable(data);
+                    },
+                    error: function () {
+                        alert('Failed to load parking summary.');
+                    },
+                });
+            }
+
+            // Render summary table
+            function renderSummaryTable(summaryData) {
+                const tableBody = $('#summaryTable tbody');
+                tableBody.empty(); // Clear any existing rows
+
+                if (summaryData.length === 0) {
+                    tableBody.html('<tr><td colspan="3">No data available.</td></tr>');
+                    return;
+                }
+
+                summaryData.forEach(locationSummary => {
+                    const row = `
+                <tr>
+                    <td>${locationSummary.location}</td>
+                    <td>${locationSummary.totalSpots}</td>
+                    <td>${locationSummary.unoccupiedSpots}</td>
+                </tr>
+            `;
+                    tableBody.append(row);
+                });
+            }
+        });
 
         // Render parking spaces in card views
         function renderSpaces(spaces) {
@@ -251,5 +322,3 @@
         }
     });
 </script>
-
-

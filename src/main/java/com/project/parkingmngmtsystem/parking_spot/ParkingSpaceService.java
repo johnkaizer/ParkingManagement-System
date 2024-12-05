@@ -92,5 +92,8 @@ public class ParkingSpaceService {
     }
 
 
+    public List<ParkingSummary> getParkingSummary() {
+        return parkingSpaceRepository.getParkingSummary();
+    }
 }
 

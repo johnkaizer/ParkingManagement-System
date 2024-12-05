@@ -23,6 +23,7 @@ public class CarBookingService {
 
     public CarBooking createBooking(CarBooking booking) {
         booking.setBookingDateTime(LocalDateTime.now());
+        booking.setExpiryDateTime(booking.getUseDateTime().plusHours(4));
         return carBookingRepository.save(booking);
     }
 
@@ -78,19 +79,29 @@ public class CarBookingService {
         return carBookingRepository.findByCustomerNameContainingIgnoreCase(name);
     }
 
-
     public void cancelBooking(Long id) {
-        CarBooking booking = carBookingRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+        CarBooking booking = getBookingById(id);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime useDateTime = booking.getUseDateTime();
 
-        ParkingSpace space = parkingSpaceService.findBySpotNumber(booking.getSpotNumber());
-        if (space != null) {
-            space.setOccupied(false);
-            parkingSpaceService.save(space);
+        if (useDateTime.isBefore(now)) {
+            throw new IllegalStateException("Booking has already started or expired and cannot be canceled.");
+        }
+
+        if (useDateTime.minusHours(12).isBefore(now)) {
+            throw new IllegalStateException("Bookings within 12 hours of use cannot be canceled.");
+        }
+
+        // Logic to handle cancellation
+        ParkingSpace parkingSpace = parkingSpaceService.findBySpotNumber(booking.getSpotNumber());
+        if (parkingSpace != null) {
+            parkingSpace.setOccupied(false);
+            parkingSpaceService.save(parkingSpace);
         }
 
         carBookingRepository.deleteById(id);
     }
+
 
 }
 

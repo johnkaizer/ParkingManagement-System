@@ -1,6 +1,7 @@
 package com.project.parkingmngmtsystem.parking_spot;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,5 +24,10 @@ public interface ParkingSpaceRepository extends JpaRepository<ParkingSpace, Long
     List<ParkingSpace> findByIsOccupied(boolean b);
 
     Optional<Object> findBySpotNumber(Integer spotNumber);
+
+    @Query("SELECT new com.project.parkingmngmtsystem.parking_spot.ParkingSummary(p.lotLocation, COUNT(p), " +
+            "SUM(CASE WHEN p.isOccupied = false THEN 1 ELSE 0 END)) " +
+            "FROM ParkingSpace p GROUP BY p.lotLocation")
+    List<ParkingSummary> getParkingSummary();
 }
 

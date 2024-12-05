@@ -73,5 +73,9 @@ public class ParkingSpaceController {
         List<Map<String, Object>> spacesWithPricing = parkingSpaceService.getUnoccupiedSpacesWithPricing();
         return ResponseEntity.ok(spacesWithPricing);
     }
+    @GetMapping("/summary")
+    public List<ParkingSummary> getParkingSummary() {
+        return parkingSpaceService.getParkingSummary();
+    }
 
 }
